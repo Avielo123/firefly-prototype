@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firefly - Cost Allocation Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f7f9fc;
+            color: #1a202c;
+        }
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a202c;
+            letter-spacing: -0.5px;
+        }
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .badge-pill {
+            background: #f3e8ff;
+            color: #7C3AED;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        .breadcrumb {
+            color: #718096;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+        .page-header {
+            margin-bottom: 30px;
+        }
+        .page-header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            color: #1a202c;
+        }
+        .page-header p {
+            color: #718096;
+            font-size: 14px;
+        }
+        .filters {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover {
+            border-color: #7C3AED;
+            color: #7C3AED;
+        }
+        .filter-btn.active {
+            background: #7C3AED;
+            color: white;
+            border-color: #7C3AED;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .card.full {
+            grid-column: 1 / -1;
+        }
+        .metric {
+            margin-bottom: 20px;
+        }
+        .metric-label {
+            color: #718096;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+        .metric-change {
+            font-size: 13px;
+            color: #48bb78;
+            margin-top: 6px;
+        }
+        .metric-change.negative {
+            color: #f56565;
+        }
+        .team-list {
+            list-style: none;
+        }
+        .team-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #edf2f7;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .team-item:hover {
+            background: #f7f9fc;
+            padding-left: 8px;
+            padding-right: -8px;
+        }
+        .team-item:last-child {
+            border-bottom: none;
+        }
+        .team-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        .team-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .team-avatar.eng { background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%); }
+        .team-avatar.data { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .team-avatar.platform { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .team-avatar.infra { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .team-cost {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+        .team-percent {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        .legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+        .cta-section {
+            background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 24px;
+        }
+        .cta-section h3 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .cta-section p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 16px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #7C3AED;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #6D28D9;
+        }
+        .btn-white {
+            background: white;
+            color: #7C3AED;
+        }
+        .btn-white:hover {
+            background: #f7f9fc;
+        }
+        .footer-note {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 12px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section">
+            <div class="logo-text">Firefly</div>
+        </div>
+        <div class="header-right">
+            <div class="badge-pill">BETA: Cost Allocation</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="breadcrumb">Infrastructure → Cost Allocation & Chargeback</div>
+
+        <div class="page-header">
+            <h1>Cloud Cost by Team</h1>
+            <p>Understand which teams are driving infrastructure spend and prove ROI</p>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="selectPeriod(this, 'This Month')">This Month</button>
+                <button class="filter-btn" onclick="selectPeriod(this, 'Last 3 Months')">Last 3 Months</button>
+                <button class="filter-btn" onclick="selectPeriod(this, 'Last 12 Months')">Last 12 Months</button>
+            </div>
+            <div style="flex: 1;"></div>
+            <button class="btn btn-primary" onclick="alert('Export initiated! Chargeback report generated.')">Export Chargeback Report</button>
+        </div>
+
+        <div class="grid">
+            <!-- Total Spend Card -->
+            <div class="card">
+                <div class="metric">
+                    <div class="metric-label">Total Cloud Spend</div>
+                    <div class="metric-value">$2.84M</div>
+                    <div class="metric-change">↑ 8% vs last month</div>
+                </div>
+            </div>
+
+            <!-- Average by Team Card -->
+            <div class="card">
+                <div class="metric">
+                    <div class="metric-label">Average per Team</div>
+                    <div class="metric-value">$355K</div>
+                    <div class="metric-change">8 teams tracked</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spend by Team -->
+        <div class="card full">
+            <h2>Spend Breakdown by Team</h2>
+            <ul class="team-list">
+                <li class="team-item" onclick="selectTeam(this, 'Engineering Platform')">
+                    <div class="team-name">
+                        <div class="team-avatar eng">ENG</div>
+                        <div>
+                            <div style="font-weight: 500;">Engineering Platform</div>
+                            <div style="color: #a0aec0; font-size: 12px;">16 resources</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="team-cost">$520K</div>
+                        <div class="team-percent">18.3%</div>
+                    </div>
+                </li>
+                <li class="team-item" onclick="selectTeam(this, 'Data & Analytics')">
+                    <div class="team-name">
+                        <div class="team-avatar data">DATA</div>
+                        <div>
+                            <div style="font-weight: 500;">Data & Analytics</div>
+                            <div style="color: #a0aec0; font-size: 12px;">8 resources</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="team-cost">$485K</div>
+                        <div class="team-percent">17.1%</div>
+                    </div>
+                </li>
+                <li class="team-item" onclick="selectTeam(this, 'Platform Engineering')">
+                    <div class="team-name">
+                        <div class="team-avatar platform">PLATFORM</div>
+                        <div>
+                            <div style="font-weight: 500;">Platform Engineering</div>
+                            <div style="color: #a0aec0; font-size: 12px;">12 resources</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="team-cost">$420K</div>
+                        <div class="team-percent">14.8%</div>
+                    </div>
+                </li>
+                <li class="team-item" onclick="selectTeam(this, 'Infrastructure & DevOps')">
+                    <div class="team-name">
+                        <div class="team-avatar infra">INFRA</div>
+                        <div>
+                            <div style="font-weight: 500;">Infrastructure & DevOps</div>
+                            <div style="color: #a0aec0; font-size: 12px;">10 resources</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="team-cost">$378K</div>
+                        <div class="team-percent">13.3%</div>
+                    </div>
+                </li>
+                <li class="team-item" onclick="selectTeam(this, 'ML & AI Research')">
+                    <div class="team-name">
+                        <div class="team-avatar" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">ML</div>
+                        <div>
+                            <div style="font-weight: 500;">ML & AI Research</div>
+                            <div style="color: #a0aec0; font-size: 12px;">6 resources</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="team-cost">$341K</div>
+                        <div class="team-percent">12.0%</div>
+                    </div>
+                </li>
+                <li class="team-item" onclick="selectTeam(this, 'Security & Compliance')">
+                    <div class="team-name">
+                        <div class="team-avatar" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #1a202c;">SEC</div>
+                        <div>
+                            <div style="font-weight: 500;">Security & Compliance</div>
+                            <div style="color: #a0aec0; font-size: 12px;">5 resources</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="team-cost">$298K</div>
+                        <div class="team-percent">10.5%</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Cost Trends -->
+        <div class="card full" style="margin-top: 24px;">
+            <h2>Monthly Cost Trend</h2>
+            <div style="margin-top: 20px; color: #718096; text-align: center; padding: 40px 0;">
+                <div style="font-size: 14px; margin-bottom: 12px;">↑ Trending upward</div>
+                <div style="font-size: 32px; color: #7C3AED; font-weight: 700;">$2.84M</div>
+                <div style="font-size: 12px; margin-top: 8px;">Oct 2025 (projected: $2.92M for Nov)</div>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #7C3AED;"></div>
+                    <span>Total spend</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e2e8f0;"></div>
+                    <span>Monthly average</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <h3>Ready to Use Chargeback Reports?</h3>
+            <p>Generate detailed chargeback reports for each team and integrate with your billing system</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="btn btn-white" onclick="alert('Learn More: Chargeback reports help teams understand cloud costs and optimize spending.')">Learn More</button>
+                <button class="btn btn-white" onclick="alert('Generating chargeback report... Download ready!')">Generate Report</button>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            💡 Tip: Use these metrics to set team budgets, prove ROI, and optimize resource allocation across your organization.
+        </div>
+    </div>
+
+    <script>
+        function selectPeriod(btn, period) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            console.log('Period selected:', period);
+        }
+
+        function selectTeam(item, team) {
+            console.log('Team selected:', team);
+        }
+    </script>
+</body>
+</html>
